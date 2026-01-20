@@ -1,6 +1,6 @@
 {
-    "data_path": "/root/autodl-tmp/weights/EEG_Image_decode/Preprocessed_data_250Hz",
-    "img_directory_training": "/root/autodl-tmp/weights/EEG_Image_decode/images_set/training_images",
-    "img_directory_test": "/root/autodl-tmp/weights/EEG_Image_decode/images_set/test_images",
-    "features_path":"/root/autodl-tmp/weights/EEG_Image_decode"
+    "data_path": "/public/home/lige2022/projects/weights/EEG_Image_decode/Preprocessed_data_250Hz",
+    "img_directory_training": "/public/home/lige2022/projects/weights/EEG_Image_decode/images_set/training_images",
+    "img_directory_test": "/public/home/lige2022/projects/weights/EEG_Image_decode/images_set/test_images",
+    "features_path":"/public/home/lige2022/projects/weights/EEG_Image_decode"
 }

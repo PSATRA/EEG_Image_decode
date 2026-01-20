@@ -544,7 +544,7 @@ if __name__ == "__main__":
     # feature_extractor = CLIPImageProcessor()
 
     # from diffusers.utils import load_image
-    # image_prompt = load_image("/mnt/dataset0/weichen/projects/visobj/proposals/mise/data/things-images/THINGSplus/images/images_resized/apple.jpg")
+    # image_prompt = load_image("/public/home/lige2022/projects/EEG_Image_decode/imgs/fig-framework.png")
     # display(image_prompt)
 
     # # encode image
@@ -591,7 +591,7 @@ if __name__ == "__main__":
         'ViT-H-14', pretrained='laion2b_s32b_b79k', precision='fp16', device='cuda')
 
     from diffusers.utils import load_image
-    image_prompt = load_image("/mnt/dataset0/weichen/projects/visobj/proposals/mise/data/things-images/THINGSplus/images/images_resized/apple.jpg")
+    image_prompt = load_image("/public/home/lige2022/projects/EEG_Image_decode/imgs/fig-framework.png")
     # image_prompt = load_image("https://th.bing.com/th/id/OIP.BGo1V-YM46ZrqSo5N_edWAHaE7?rs=1&pid=ImgDetMain")
 
     display(image_prompt)
