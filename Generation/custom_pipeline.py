@@ -1,3 +1,7 @@
+import os
+# Use Hugging Face mirror for China
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+
 from diffusers.pipelines.stable_diffusion_xl.pipeline_stable_diffusion_xl import *
 
 @torch.no_grad()

@@ -2,6 +2,9 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import os
+# Use Hugging Face mirror for China
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+
 import clip
 from torch.nn import functional as F
 import torch.nn as nn

@@ -1,4 +1,7 @@
 import os
+# Use Hugging Face mirror for China
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+
 import torch
 from torch import nn
 import torch.nn.functional as F

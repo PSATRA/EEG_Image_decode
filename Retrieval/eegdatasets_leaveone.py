@@ -10,6 +10,9 @@ from PIL import Image
 import requests
 
 import os
+# Use Hugging Face mirror for China
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+
 # Note: Set http_proxy/https_proxy environment variables if needed
 cuda_device_count = torch.cuda.device_count()
 print(cuda_device_count)
