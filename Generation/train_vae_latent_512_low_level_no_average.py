@@ -494,7 +494,7 @@ def main_train_loop(sub, current_time, eeg_model, img_model, train_dataloader, t
 def main():
     # Argument parser setup
     parser = argparse.ArgumentParser(description='EEG Model Training Script')
-    parser.add_argument('--data_path', type=str, default='/root/autodl-tmp/THINGS/Preprocessed_data_250Hz', help='Path to data')
+    parser.add_argument('--data_path', type=str, default='/root/autodl-tmp/weights/EEG_Image_decode/Preprocessed_data_250Hz', help='Path to data')
     parser.add_argument('--output_dir', type=str, default='./outputs/contrast', help='Directory to save output results')
     parser.add_argument('--project', type=str, default='train_pos_img_text_rep', help='Project name for logging')
     parser.add_argument('--entity', type=str, default="sustech_rethinkingbci", help='WandB entity name')
