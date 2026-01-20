@@ -34,6 +34,7 @@ with open(config_path, "r") as config_file:
 data_path = config["data_path"]
 img_directory_training = config["img_directory_training"]
 img_directory_test = config["img_directory_test"]
+features_path = config.get("features_path", ".")
 
 
 class EEGDataset():
@@ -62,12 +63,17 @@ class EEGDataset():
         
         if self.classes is None and self.pictures is None:
             # Try to load the saved features if they exist
-            features_filename = os.path.join(f'{model_type}_features_train.pt') if self.train else os.path.join(f'{model_type}_features_test.pt')
+            features_filename = os.path.join(features_path, f'{model_type}_features_train.pt') if self.train else os.path.join(features_path, f'{model_type}_features_test.pt')
             
             if os.path.exists(features_filename) :
                 saved_features = torch.load(features_filename)
                 self.text_features = saved_features['text_features']
                 self.img_features = saved_features['img_features']
+                # When image folders are missing, create placeholders to avoid index errors
+                if len(self.text) == 0:
+                    self.text = [f"placeholder_text_{i}" for i in range(self.text_features.shape[0])]
+                if len(self.img) == 0:
+                    self.img = [f"placeholder_img_{i}" for i in range(self.img_features.shape[0])]
             else:
                 self.text_features = self.Textencoder(self.text)
                 self.img_features = self.ImageEncoder(self.img)
