@@ -1,7 +1,10 @@
 import os
+import math
+import datetime
 
 import torch
 import torch.optim as optim
+from torch import Tensor
 from torch.nn import CrossEntropyLoss
 from torch.nn import functional as F
 from torch.optim import Adam
@@ -29,6 +32,9 @@ import csv
 from braindecode.models import EEGNetv4, ATCNet, EEGConformer, EEGITNet, ShallowFBCSPNet
 import argparse
 
+# Default device used by some encoder definitions below.
+# The training loop will still move models to args.device.
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 
 
@@ -627,7 +633,8 @@ def evaluate_model(model, dataloader, device, text_features_all, img_features_al
 def main_train_loop(sub, model, train_dataloader, test_dataloader, optimizer, device, 
                     text_features_train_all, text_features_test_all, img_features_train_all, img_features_test_all, config, logger=None):
     logger = wandb_logger(config) if logger else None
-    logger.watch(model,logger) 
+    if logger is not None:
+        logger.watch(model, logger)
     
     train_losses, train_accuracies = [], []
     test_losses, test_accuracies = [], []
@@ -688,16 +695,17 @@ def main_train_loop(sub, model, train_dataloader, test_dataloader, optimizer, de
                 "v4_acc":v4_acc,
                 "v10_acc":v10_acc
             }
-        logger.log({
-            "Train Loss": train_loss,
-            "Train Accuracy": train_accuracy,
-            "Test Loss": test_loss,
-            "Test Accuracy": test_accuracy,
-            "v2 Accuracy": v2_acc,
-            "v4 Accuracy": v4_acc,
-            "v10 Accuracy": v10_acc,
-            "Epoch": epoch
-        })
+        if logger is not None:
+            logger.log({
+                "Train Loss": train_loss,
+                "Train Accuracy": train_accuracy,
+                "Test Loss": test_loss,
+                "Test Accuracy": test_accuracy,
+                "v2 Accuracy": v2_acc,
+                "v4 Accuracy": v4_acc,
+                "v10 Accuracy": v10_acc,
+                "Epoch": epoch
+            })
 
         print(f"Epoch {epoch + 1}/{config['epochs']} - Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.4f}, Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}, Top5 Accuracy: {top5_acc:.4f}")
         print(f"Epoch {epoch + 1}/{config['epochs']} - v2 Accuracy:{v2_acc} - v4 Accuracy:{v4_acc} - v10 Accuracy:{v10_acc}")
@@ -757,7 +765,8 @@ def main_train_loop(sub, model, train_dataloader, test_dataloader, optimizer, de
     
     plt.suptitle('pos_img_text', fontsize=16, y=1.05)
     plt.savefig('pos_img_text')
-    logger.finish()
+    if logger is not None:
+        logger.finish()
     return results
 
 def main():
@@ -770,8 +779,10 @@ def main():
     parser.add_argument('--lr', type=float, default=3e-4, help='Learning rate')
     parser.add_argument('--epochs', type=int, default=40, help='Number of training epochs')
     parser.add_argument('--batch_size', type=int, default=1024, help='Batch size')
-    parser.add_argument('--logger', default=True, help='Enable logging')
-    parser.add_argument('--insubject', default=True, help='Train within subject')
+    # Use argparse BooleanOptionalAction so you can do --logger / --no-logger
+    parser.add_argument('--logger', default=True, action=argparse.BooleanOptionalAction, help='Enable logging (wandb)')
+    parser.add_argument('--insubject', default=True, action=argparse.BooleanOptionalAction, help='Train within subject')
+    parser.add_argument('--subjects', nargs='+', default=None, help='Subject IDs to run (e.g., sub-08). If omitted, auto-detect from data_path.')
     parser.add_argument('--encoder_type', type=str, default='Projector', help='EEG encoder model type, you can choose from these options: Projector, EEGConformer_Encoder, MetaEEG, EEGNetv4_Encoder, ShallowFBCSPNet_Encoder, NICE, ATCNet_Encoder, EEGITNet_Encoder')
     parser.add_argument('--device', type=str, default='cuda:0', help='Device to use for training (e.g., "cuda:0" or "cpu")')
 
@@ -779,11 +790,31 @@ def main():
 
     device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
     data_path = args.data_path
-    subjects = ['sub-01', 'sub-02', 'sub-03', 'sub-04', 'sub-05', 'sub-06', 'sub-07', 'sub-08', 'sub-09', 'sub-10']
+
+    if args.subjects is not None:
+        subjects = args.subjects
+    else:
+        # Auto-detect available subjects from the preprocessed data directory
+        try:
+            subjects = sorted(
+                d for d in os.listdir(data_path)
+                if os.path.isdir(os.path.join(data_path, d)) and d.startswith('sub-')
+            )
+        except FileNotFoundError:
+            subjects = []
+
+        # Fall back to the original list if auto-detection fails
+        if len(subjects) == 0:
+            subjects = ['sub-01', 'sub-02', 'sub-03', 'sub-04', 'sub-05', 'sub-06', 'sub-07', 'sub-08', 'sub-09', 'sub-10']
 
     for sub in subjects:
         # Re-initialize the model for each subject
-        model = globals()[args.encoder_type]((63, 250))
+        model_cls = globals()[args.encoder_type]
+        # Some encoders take an input shape argument, others take none.
+        try:
+            model = model_cls((63, 250))
+        except TypeError:
+            model = model_cls()
         model.to(device)
         optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
 
